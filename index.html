@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <link rel="stylesheet" href="static/style.css" />
+  </head>
+
+  <body>
+    <h1>Elden Ring Levelling Calculator</h1>
+    <main></main>
+    <template id="runesInput">
+      <h3>Golden Rune [<span id="level"></span>]</h3>
+      <span id="inputSpan"></span>
+    </template>
+  </body>
+
+  <script>
+    var template = document.querySelector("#runesInput");
+    for (var i = 1; i < 14; i += 1) {
+      var clone = template.content.cloneNode(true);
+      var headerSpan = clone.querySelector("#level");
+      headerSpan.textContent = i;
+      var input = clone.querySelector("#inputSpan");
+      input.innerHTML = `<input type="number" id="gr${i}" name="gr${i}" min="0" max="100" value="0">`;
+      template.parentNode.appendChild(clone);
+    }
+  </script>
+</html>
