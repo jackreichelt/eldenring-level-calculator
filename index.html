@@ -6,8 +6,10 @@
 
   <body>
     <h1>Runecracker</h1>
+    <div>This tool tells you what level you can get to by cracking your Golden Runes. It prioritises using bigger runes to save you time.</div>
     <main>
-      <div>Max level: <output id="maxLevel">1</output></div>
+      <h2>Max level: <output id="maxLevel">1</output></h2>
+      <h2 id="runesToCrack"></h2>
 
       <h3>Current Level: </h3>
       <input type="number" id="currentLevel" name="currentLevel" min="1" max="500" value="1" onchange="calculate()">
@@ -31,6 +33,9 @@
       input.innerHTML = `<input type="number" id="gr${i}" class="grCount" name="gr${i}" min="0" max="100" value="0" onchange="calculate()">`;
       template.parentNode.appendChild(clone);
     }
+    document.querySelector('#maxLevel').textContent = Number(document.querySelector('#currentLevel').value)
+    calculate()
+
 
     function calculate() {
       runeValues = [200, 400, 800, 1200, 1600, 2000, 2500, 3000, 3800, 5000, 6200, 7500, 10000]
@@ -41,22 +46,66 @@
       let grCounts = document.querySelectorAll('.grCount')
 
       let maxLevelOutput = document.querySelector('#maxLevel')
+      let runeCrackingOutput = document.querySelector('#runesToCrack')
 
       let maxLevel = currentLevel
       let remainingRunes = currentRunes
       for (let i = 0; i < grCounts.length; i += 1) {
         remainingRunes += runeValues[i] * Number(grCounts[i].value)
       }
+      const maxRunes = remainingRunes
 
-      console.log('remainingRunes', remainingRunes, ', maxLevel', maxLevel)
       while(remainingRunes >= levelCosts[maxLevel+1]) {
         maxLevel++
         remainingRunes -= levelCosts[maxLevel]
-        console.log('remainingRunes', remainingRunes, ', maxLevel', maxLevel)
       }
 
       maxLevelOutput.textContent = maxLevel
+      if (maxLevel == currentLevel) {
+        return
+      }
 
+      let runesToCrack = {}
+      let remainingGRs = {}
+
+      let runesNeeded = maxRunes - currentRunes - remainingRunes
+
+      // crack as few runes as possible by working from top to bottom
+      for (let i = grCounts.length - 1; i >= 0; i--) {
+        let runesOfTier = Number(grCounts[i].value)
+        while (runesNeeded > runeValues[i] && runesOfTier > 0) {
+          runesToCrack[i+1] = (runesToCrack[i+1] || 0) + 1
+          runesOfTier -= 1
+          runesNeeded -= runeValues[i]
+        }
+        if (runesOfTier > 0) {
+          remainingGRs[i] = runesOfTier
+        }
+      }
+      // if runes not cracked perfectly, one more will be needed. Crack smallest possible.
+      for (let i = 0; i < grCounts.length; i++) {
+        if (runeValues[i] >= runesNeeded && remainingGRs[i] > 0) {
+          runesToCrack[i+1] = (runesToCrack[i+1] || 0) + 1
+          break
+        }
+      }
+
+      // Generate runes to crack string
+      let outputString = '';
+      for (let i = grCounts.length; i >= 1; i--) {
+        if (runesToCrack[i] > 0) {
+          if (outputString !== '') {
+            outputString = ', ' + outputString
+          }
+          outputString = `${runesToCrack[i]} x Greater Rune [${i}]` + outputString
+        }
+      }
+      if (outputString === '') {
+        outputString = 'none'
+      }
+      outputString = 'Runes to crack: ' + outputString
+
+      runeCrackingOutput.textContent = outputString
     }
   </script>
 
